@@ -20,11 +20,21 @@ Funciones opcionales (usadas por GET /metrics, /dataset_info, /dataset_sample):
 El modelo activo es el de COIL 2000 (seguro de caravana) en caravan_model.py.
 """
 
-from caravan_model import (
-    get_dataset_info,
-    get_dataset_sample,
-    get_feature_names,
-    get_metrics,
-    load_model,
-    predict_single,
-)
+try:
+    from .caravan_model import (
+        get_dataset_info,
+        get_dataset_sample,
+        get_feature_names,
+        get_metrics,
+        load_model,
+        predict_single,
+    )
+except ImportError:
+    from caravan_model import (
+        get_dataset_info,
+        get_dataset_sample,
+        get_feature_names,
+        get_metrics,
+        load_model,
+        predict_single,
+    )

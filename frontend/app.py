@@ -5,11 +5,12 @@ Muestra: predicción con las features del modelo, resumen del dataset y variable
 y resultados del modelo (métricas). La API debe estar levantada (uvicorn en backend/).
 """
 
+import os
+
 import requests
 import streamlit as st
 
-
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
 
 
 def fetch_json(endpoint: str, params: dict | None = None):
@@ -34,6 +35,14 @@ st.markdown(
     "Benchmark (COIL 2000). Usa las pestañas para **predecir**, ver **dataset y variables**, "
     "y los **resultados del modelo** (métricas)."
 )
+
+health = fetch_json("/health")
+if health and health.get("status") == "ok":
+    st.success(f"API conectada en {API_URL}")
+else:
+    st.warning(
+        "No hay conexión con la API. Lanza el backend con: uv run uvicorn backend.main:app --reload"
+    )
 
 tab_pred, tab_dataset, tab_metrics = st.tabs(["Predicción", "Dataset y variables", "Resultados del modelo"])
 

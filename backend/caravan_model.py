@@ -9,17 +9,14 @@ resultados en la API y en Streamlit.
 Enlace UCI: https://archive.ics.uci.edu/ml/datasets/Insurance+Company+Benchmark+(COIL+2000)
 """
 
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-
+from xgboost import XGBClassifier
 
 # Ruta al dataset (desde backend/, data/ está en la raíz del proyecto)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -72,29 +69,40 @@ def load_model() -> Any:
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # TODO (alumno): Sustituye por tu modelo y/o hiperparámetros (p. ej. RandomForest, XGBoost)
-    pipeline = Pipeline(
-        steps=[
-            ("scaler", StandardScaler()),
-            ("clf", LogisticRegression(max_iter=500, class_weight="balanced")),
-        ]
+    # Ajuste de desbalanceo para mejorar el aprendizaje de la clase positiva.
+    pos_count = int(y_train.sum())
+    neg_count = int(len(y_train) - pos_count)
+    scale_pos_weight = (neg_count / pos_count) if pos_count > 0 else 1.0
+
+    model = XGBClassifier(
+        n_estimators=300,
+        max_depth=4,
+        learning_rate=0.05,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        objective="binary:logistic",
+        eval_metric="auc",
+        scale_pos_weight=scale_pos_weight,
+        random_state=42,
     )
-    pipeline.fit(X_train, y_train)
+    model.fit(X_train, y_train)
 
     # Calcular y cachear métricas para get_metrics()
     global _cached_metrics
-    y_pred = pipeline.predict(X_test)
-    y_proba = pipeline.predict_proba(X_test)[:, 1]
+    y_pred = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)[:, 1]
     _cached_metrics = {
         "accuracy": float(accuracy_score(y_test, y_pred)),
-        "auc_roc": float(roc_auc_score(y_test, y_proba)) if y_test.nunique() > 1 else 0.0,
+        "auc_roc": float(roc_auc_score(y_test, y_proba))
+        if y_test.nunique() > 1
+        else 0.0,
         "n_features": len(_DEFAULT_FEATURE_COLS),
-        "model_type": "LogisticRegression",
+        "model_type": "XGBClassifier",
         "n_train": len(X_train),
         "n_test": len(X_test),
     }
 
-    return pipeline
+    return model
 
 
 def get_feature_names() -> list[str]:

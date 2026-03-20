@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException
 
-import model
-import schemas
+try:
+    from . import model, schemas
+except ImportError:
+    import model
+    import schemas
 
 
 app = FastAPI(
@@ -51,7 +54,9 @@ def predict(payload: schemas.PredictRequest):
     features = payload.features
 
     if not features:
-        raise HTTPException(status_code=400, detail="La lista de 'features' no puede estar vacía.")
+        raise HTTPException(
+            status_code=400, detail="La lista de 'features' no puede estar vacía."
+        )
 
     expected_len = len(model.get_feature_names())
     if len(features) != expected_len:
@@ -137,4 +142,3 @@ def dataset_sample(n: int = 100):
             detail="No hay muestra del dataset. Implementa get_dataset_sample(n) en el módulo de modelo.",
         )
     return {"sample": data, "n": len(data)}
-
