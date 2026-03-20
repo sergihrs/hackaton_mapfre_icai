@@ -1,0 +1,34 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Variables de entorno (no subir secretos)
+.env
+.env.*
+
+# Dataset COIL 2000 (grande; descargar con scripts/download_coil2000.py)
+data/*.txt
+
+# Streamlit
+.streamlit/secrets.toml
